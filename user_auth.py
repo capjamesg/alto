@@ -21,7 +21,7 @@ def login():
             url = request.url
             url = url.split("login?r=")[-1]
             # if url doesn't start with http[s]://alto.jamesg.blog, break
-            if re.match(r"^https?://alto\.jamesg\.blog", url) is None:
+            if re.match(r"^https?://alto\.jamesg\.blog", url):
                 session["user_redirect"] = url
                 session["rel_me_check"] = request.args.get("me")
                 return redirect("/rel")
@@ -62,14 +62,18 @@ def rel_login_stage():
         session.get("rel_me_check"), require_rel_me_link_back=False
     )
 
-    representative_h_card = indieweb_utils.get_representative_h_card(
-        session.get("rel_me_check")
-    )
+    try:
+        representative_h_card = indieweb_utils.get_representative_h_card(
+            session.get("rel_me_check")
+        )
+    except Exception:
+        representative_h_card = None
+
+    profile_picture = None
+    name = None
 
     if representative_h_card:
         representative_h_card = representative_h_card["properties"]
-        profile_picture = None
-        name = None
         if "photo" in representative_h_card:
             profile_picture = representative_h_card["photo"][0]
             if isinstance(profile_picture, dict) and "value" in profile_picture:
@@ -85,6 +89,11 @@ def rel_login_stage():
 
     # order rel me links alphabetically
     rel_me_links = sorted(rel_me_links, key=lambda x: x.lower())
+
+    for link in rel_me_links:
+        if link.startswith("mailto:"):
+            session["rel_me_email"] = link.replace("mailto:", "")
+            break
 
     return render_template(
         "authentication_flow/login.html",

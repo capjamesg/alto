@@ -7,7 +7,7 @@ from datetime import timedelta
 from urllib.parse import urlparse as parse_url
 
 import indieweb_utils
-import jwt
+from jose import jwt
 import requests
 import random
 import string
@@ -22,16 +22,16 @@ from forms import ConfirmAuth
 from scopes import SCOPE_DEFINITIONS
 
 def compose_profile_response(me, scope, response={}):
+    h_card = h_card_cache.get(me, {})
     if "profile" in scope:
         profile = {}
-        h_card = h_card_cache.get(me)
 
-    if h_card.get("name"):
-        profile["name"] = h_card.get("name")
-    if h_card.get("photo"):
-        profile["photo"] = h_card.get("photo")
+        if h_card.get("name"):
+            profile["name"] = h_card.get("name")
+        if h_card.get("photo"):
+            profile["photo"] = h_card.get("photo")
 
-    response["profile"] = profile
+        response["profile"] = profile
     # if email in scope
     if "email" in scope and h_card.get("email"):
         if not response.get("profile"):
@@ -77,7 +77,7 @@ def logout():
     session.pop("user_redirect", None)
     session.pop("redirect_after_auth", None)
     session.pop("rel_me_check", None)
-    flash("You have been logged out.")
+    flash({"message": "You have been logged out.", "category": "info"})
 
     return redirect("/")
 
@@ -95,10 +95,10 @@ def authorization_endpoint():
             and request.args.get("me").strip("/") != session.get("me").strip("/")
         ):
             flash(
-                f"""
+                {"message": f"""
                 {request.args.get('client_id')} is requesting you to sign in as {request.args.get('me')}.
                 Please sign in as {request.args.get('me')}.
-            """
+            """}
             )
             return redirect(f"/logout?r={request.url}")
 
@@ -284,12 +284,14 @@ def authorization_endpoint():
 
         # create table if not exists issued_tokens (encoded_code, h_app, refresh_token, redeemed_from_code);
         cursor.execute(
-            "INSERT INTO issued_tokens VALUES (?, ?, ?, ?)",
+            "INSERT INTO issued_tokens VALUES (?, ?, ?, ?, ?, ?)",
             (
                 access_token,
                 json.dumps(h_app_item),
                 refresh_token,
-                code
+                code,
+                me,
+                int(time.time())
             ),
         )
 
@@ -308,9 +310,10 @@ def view_issued_tokens():
     connection = sqlite3.connect("tokens.db")
 
     with connection:
+        print(session.get("me"))
         cursor = connection.cursor()
         issued_tokens = cursor.execute(
-            "SELECT * FROM issued_tokens WHERE me = ? ORDER BY now DESC",
+            "SELECT * FROM issued_tokens WHERE me = ? ORDER BY issued_on DESC",
             (session.get("me"),),
         ).fetchall()
 
@@ -318,16 +321,20 @@ def view_issued_tokens():
 
         for item in issued_tokens:
             try:
-                ix = jwt.decode(item, config.SECRET_KEY, algorithms=["HS256"])
-                ix["h-app"] = json.loads(item[2]) if item[2] else {}
-                decoded_tokens.append(asdict(ix))
+                ix = jwt.decode(item[0], config.SECRET_KEY, algorithms=["HS256"])
+                ix["h-app"] = json.loads(item[1]) if item[1] else {}
+                ix["issued_on"] = datetime.datetime.fromtimestamp(item[5]).strftime("%d %b %Y, %H:%M")
+                ix["token_encoded"] = item[0]
+                ix["scopes"] = ix.get("scope", "").split(" ") if ix.get("scope") else []
+                decoded_tokens.append(ix)
             except Exception as e:
+                print(e)
                 pass
 
     return render_template(
         "admin/issued.html",
         title="Issued Tokens",
-        issued_tokens=issued_tokens,
+        issued_tokens=decoded_tokens,
         SCOPE_DEFINITIONS=SCOPE_DEFINITIONS,
         me=session.get("me"),
     )
@@ -362,6 +369,7 @@ def generate_key():
             code_challenge_method,
             final_scope,
             config.SECRET_KEY,
+            code_challenge=request.form.get("code_challenge")
         )
 
         encoded_code = response.code
@@ -371,7 +379,7 @@ def generate_key():
 
     if is_manually_issued and is_manually_issued == "true":
         flash(
-            f"<p>Your token was successfully issued.</p><p>Your new token is: {encoded_code}"
+            {"message": f"Your token was successfully issued. Your new token is: {encoded_code}"}
         )
         return redirect("/issued")
 
@@ -492,12 +500,14 @@ def token_endpoint():
 
         # create table if not exists issued_tokens (encoded_code, h_app, refresh_token, redeemed_from_code);
         cursor.execute(
-            "INSERT INTO issued_tokens VALUES (?, ?, ?, ?)",
+            "INSERT INTO issued_tokens VALUES (?, ?, ?, ?, ?, ?)",
             (
                 access_token,
                 json.dumps(h_app_item),
                 refresh_token,
-                code
+                code,
+                me,
+                iat
             ),
         )
 

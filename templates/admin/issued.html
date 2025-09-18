@@ -8,10 +8,10 @@
 <h1>Alto Settings</h1>
 <h2>Your Account</h2>
 <section class="profile-card">
-{% if session.get("h_card", {}).get("photo") %}
+{% if session.get("h_card") and session.get("h_card", {}).get("photo") %}
     <img src="{{ session.get("h_card").get("photo") }}" alt="Profile Picture" height="3rem"/>
 {% endif %}
-{% if session.get("h_card", {}).get("name") %}
+{% if session.get("h_card", {}) and session.get("h_card", {}).get("name") %}
     <p>You are signed in as {{ session.get("h_card", {}).get("name") }} (<a href="{{ session.get("me") }}">{{ session.get("me") }}</a>).</p>
 {% else %}
     <p>You are signed in as <a href="{{ session.get("me") }}">{{ session.get("me") }}</a>.</p>
@@ -28,8 +28,8 @@
           </ul>
        {% endif %}
     {% endwith %}
-    <p>You have signed into the following sites with Alto:</p>
     {% if issued_tokens %}
+        <p>You have signed into the following sites with Alto:</p>
         <table>
             <thead>
                 <tr>
@@ -42,10 +42,14 @@
             <tbody>
                 {% for token in issued_tokens %}
                 <tr>
-                    <td data-label="Issued To">{% if token[5] and token[5].logo %}<img src="{{ token[5].logo }}" style="height: 1rem; width: 1rem;" />{% endif %}<a href="{% if token[5] and token[5].url %}{{ token[5].url }}{% else %}{{ token[3] }}{% endif %}">{% if token[5] and token[5].name %}{{ token[5].name }}{% else %}{{ token[3] }}{% endif %}</a></td>
-                    <td data-label="Issued On">{{ token[2] }}</td>
-                    <td data-label="Scope(s)">{% if token[6] %}{{ token[6] }}{% else %}<em>None</em>{% endif %}</td>
-                    <td data-label="Actions"><a href="/revoke?token={{ token[0] }}">Revoke</a></td>
+                    <td data-label="Issued To">
+                        {% if token.get("h-app") and token["h-app"].get("logo") %}
+                            <img src="{{ token["h-app"].get("logo") }}" alt="{{ token["h-app"].get("name", "App") }} logo" height="32" width="32" style="vertical-align: middle; border-radius: 0.25rem; margin-right: 0.5rem;" />
+                        {% endif %}
+                        {% if token.get("h-app") and token["h-app"].get("name") %}<a href="{{ token["h-app"].get("url", "#") }}">{{ token["h-app"].get("name") }}</a>{% else %}{{ token["client_id"].replace("https://", "").replace("http://", "") }}{% endif %}</td>
+                    <td data-label="Issued On">{{ token["issued_on"] }}</td>
+                    <td data-label="Scope(s)">{% if token.get('scope') %}{{ token.get("scope") }}{% else %}<em>None</em>{% endif %}</td>
+                    <td data-label="Actions"><a href="/revoke?token={{ token["token_encoded"] }}">Revoke</a></td>
                 </tr>
                 {% endfor %}
             </tbody>

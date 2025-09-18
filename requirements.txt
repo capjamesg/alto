@@ -20,3 +20,4 @@ urllib3==2.5.0
 webencodings==0.5.1
 Werkzeug==3.0.6
 flask-wtf
+python-jose

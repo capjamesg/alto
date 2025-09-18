@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>{% if get_flashed_messages() %}{{ get_flashed_messages()[0].message }} - {% endif %}{% if title %}{{ title }}{% else %}Alto{% endif %}</title>
+    <title>
+      {% if get_flashed_messages() %}{{ get_flashed_messages()[0].message }} - {% endif %}
+      {% if title %}{{ title }}{% else %}Alto{% endif %}
+    </title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 
     <link rel="icon" href="https://artemis.jamesg.blog/assets/mascot-newspaper.svg" />
@@ -16,7 +19,7 @@
         <p><a href="/">Alto</a></p>
         {% if session.get("logged_in") == True %}
         <ul>
-          <li><a href="/issued" class="flex">{% if session.get("h_card", {}).get("photo") %}<img src="{{ session.get("h_card", {}).get("photo") }}" alt="Profile Picture"> {% endif %}Signed in as {{ session.get("h_card", {}).get("name", session.get("me")) }}</a></li>
+          <li><a href="/issued" class="flex">{% if session.get("h_card", None) %}{% if session.get("h_card", {}).get("photo") %}<img src="{{ session.get("h_card", {}).get("photo") }}" alt="Profile Picture"> {% endif %}Signed in as {{ session.get("h_card", {}).get("name", session.get("me")) }}{% else %}Signed in as {{ session.get("me") }}{% endif %}</a></li>
           <li><a href="/logout">Logout</a></li>
         </ul>
         {% endif %}

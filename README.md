@@ -6,6 +6,11 @@ Using this project, you can authenticate yourself to a service by using [RelMeAu
 
 - GitHub
 - Email
+- Tumblr
+- Mastodon
+- Wikipedia
+
+![An example of an Alto consent screen showing the application name that wants to sign in via Alto, the scopes that are requested, and options to authorise or cancel the authentication request](./screenshot.png)
 
 ## Setup
 
@@ -37,8 +42,7 @@ This key is used by Flask and is required for this web application to run. Your 
 
 Next, run the IndieAuth server using Flask:
 
-    export FLASK_APP=.
-    flask run
+    python3 run.py
 
 If you plan to deploy the server on production, please use an appropriate production deployment method (i.e. using Gunicorn) as you would for any other Flask application.
 

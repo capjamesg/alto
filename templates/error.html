@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-{% if error_type == "404" %}
+{% if error_type == 404 %}
 <h1>404</h1>
 <p>This page cannot be found.</p>
 <p><a href="/">Go back to the homepage.</a></p>
-{% elif error_type == "400" %}
+{% elif error_type == 400 %}
 <h1>400</h1>
 <p>Bad request. The service cannot process your request.</p>
 <p><a href="/">Go back to the homepage.</a></p>
-{% elif error_type == "405" %}
+{% elif error_type == 405 %}
 <h1>405</h1>
 <p>This method is not allowed on this page.</p>
 <p><a href="/">Go back to the homepage.</a></p>

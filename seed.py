@@ -25,6 +25,8 @@ c.execute(
         h_app text text,
         refresh_token text,
         redeemed_from_code text,
+        me text,
+        issued_on integer
     );
     """
 )

@@ -65,7 +65,7 @@ On the /issued endpoint, you can:
 
 When an access token is revoked, it will immediately become invalid as per the revocation guidelines in the [IndieAuth specification](https://indieauth.spec.indieweb.org/).
 
-## License
+## Licence
 
 The code in this project is licensed under an [MIT No Attribution License](LICENSE).
 

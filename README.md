@@ -18,7 +18,7 @@ To setup this project, first install the required dependencies. You can do this 
 
     pip3 install -r requirements.txt
 
-Next, you will need to add some configration variables to a file called config.py.
+Next, you will need to add some configuration variables to a file called config.py.
 
 ### Create a configuration file
 
@@ -50,7 +50,7 @@ If you plan to deploy the server on production, please use an appropriate produc
 
 There are two ways to issue an access token with this endpoint:
 
-1. Sign in with a service that supports IndieAuth and follow the authenication and authorization flows. Authentication is when you sign in and authorization is when you grant an application access to certain permissions.
+1. Sign in with a service that supports IndieAuth and follow the authentication and authorization flows. Authentication is when you sign in and authorization is when you grant an application access to certain permissions.
 2. Sign in to the endpoint at /login and issue a token at /issued.
 
 The second approach is useful if you need a testing key for development. You can create a key and then use it in your application without having to worry about getting localhost to work with the authentication and authorization flows.

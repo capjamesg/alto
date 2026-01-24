@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Alto</h1>
-<p>Alto lets you verify your identity using your domain name.</p>
+<p>Alto lets you sign into websites using your domain name.</p>
+<h2>How to Use</h2>
+<h3>Step 1: Add Alto to your website</h3>
 <p>To get started, add the following meta tags to the <code>head</code> tag on your website:</p>
 <pre>
 &lt;link rel=&quot;authorization_endpoint&quot;
@@ -10,12 +12,31 @@
 &lt;link rel=&quot;token_endpoint&quot;
     href=&quot;{{ TOKEN_SERVER_URL }}&quot;&gt;
 </pre>
-<p>You will also need to add a <code>rel=me</code> link that is either an email or GitHub link, like:</p>
+<h3>Step 2: Add a social profile or email address</h3>
+<p>You will also need to add a <code>rel=me</code> link. You can add links to any of the following profiles:</p>
+<ul>
+    <li>Mastodon</li>
+    <li>Tumblr</li>
+    <li>GitHub</li>
+    <li>Your email address</li>
+</ul>
+<p>Here is an example:</p>
 <pre>
+&lt;link rel=&quot;me&quot;
+    href=&quot;https://github.com/capjamesg&quot;&gt;
 &lt;link rel=&quot;me&quot;
     href=&quot;mailto:example@example.com&quot;&gt;
 </pre>
-<p>When you sign into a service that supports <a href="https://indieweb.org/Web_sign-in">web sign in</a> (i.e. <a href="https://artemis.jamesg.blog">the Artemis web reader</a>), you will be able to log in using Alto.</p>
+<h3>Step 3: Use your domain name to sign in</h3>
+<p>When you sign into a service that supports <a href="https://indieweb.org/Web_sign-in">web sign in</a>, you will be able to log in using Alto.</p>
+<p>Here are a few sites that support IndieAuth for sign in:</p>
+<ul>
+    <li><a href="https://artemis.jamesg.blog">Artemis</a>, a calm web reader.</li>
+    <li><a href="https://indieweb.org">The IndieWeb wiki</a>, a community wiki for the IndieWeb community.</li>
+    <li><a href="https://indiebookclub.biz">IndieBookClub</a>, a book tracking tool.</li>
+    <li><a href="https://webmention.io">webmention.io</a>, a tool for accepting Webmentions.</li>
+    <li><a href="https://telegraph.p3k.io">Telegraph</a>, a tool for sending Webmentions.</li>
+</ul>
 <footer>
     <p>This service was made with love of the web by <a href="https://jamesg.blog" rel="source repository">capjamesg</a>.</p>
     <p><a href="https://github.com/capjamesg/alto">View source</a> | <a href="/privacy">Privacy policy</a> | <a href="/accessibility">Accessibility statement</a></p>

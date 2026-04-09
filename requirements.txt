@@ -18,7 +18,7 @@ soupsieve==2.2.1
 tweepy==4.1.0
 urllib3==2.6.3
 webencodings==0.5.1
-Werkzeug==3.1.4
+Werkzeug==3.1.6
 flask-wtf
 python-jose
 indieweb_utils

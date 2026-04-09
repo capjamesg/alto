@@ -2,7 +2,6 @@ import datetime
 import json
 import sqlite3
 import time
-from dataclasses import asdict
 from datetime import timedelta
 from urllib.parse import urlparse as parse_url
 
@@ -11,9 +10,10 @@ from jose import jwt
 import requests
 import random
 import string
-from bs4 import BeautifulSoup
+
+import validators
 from cachetools import TLRUCache
-from flask import (Blueprint, abort, flash, jsonify, redirect, render_template,
+from flask import (Blueprint, flash, jsonify, redirect, render_template,
                    request, session)
 
 import config
@@ -64,6 +64,10 @@ def index():
 @app.route("/accessibility")
 def accessibility():
     return render_template("accessibility.html", title="Accessibility Statement")
+
+@app.route("/sustainability")
+def sustainability():
+    return render_template("sustainability.html", title="Sustainability")
 
 @app.route("/privacy")
 def privacy():
@@ -121,10 +125,13 @@ def authorization_endpoint():
             print("invalid response type")
             return jsonify({"error": "invalid_request"})
 
+        client_id_app = None
+
         try:
-            client_id_app = requests.get(client_id)
+            if validators.url(url, private=False):
+                client_id_app = requests.get(client_id)
         except Exception as e:
-            client_id_app = None
+            pass
 
         h_app_item = client_information_cache.get(client_id)
 
@@ -167,15 +174,18 @@ def authorization_endpoint():
                     "summary": response.get("client_description"),
                 }
             elif client_id.endswith("/client.json"):
-                try:
-                    client_file = requests.get(client_id).json()
+                if validators.url(client_id, private=False):
+                    try:
+                        client_file = requests.get(client_id).json()
 
-                    h_app_item = {
-                        "logo": client_file["client_logo"],
-                        "name": client_file["client_name"],
-                        "url": client_file["client_uri"],
-                    }
-                except:
+                        h_app_item = {
+                            "logo": client_file["client_logo"],
+                            "name": client_file["client_name"],
+                            "url": client_file["client_uri"],
+                        }
+                    except:
+                        h_app_item = {}
+                else:
                     h_app_item = {}
             else:
                 try:
@@ -274,13 +284,14 @@ def authorization_endpoint():
         h_app_item = client_information_cache.get(client_id)
 
         if not h_app_item:
-            try:
-                client_id_app = requests.get(client_id, timeout=5)
+            if validators.url(client_id, private=False):
+                try:
+                    client_id_app = requests.get(client_id, timeout=5)
 
-                h_app_item = indieweb_utils.get_h_app_item(client_id_app.text, client_id)
-                client_information_cache[client_id] = h_app_item
-            except Exception:
-                h_app_item = {}
+                    h_app_item = indieweb_utils.get_h_app_item(client_id_app.text, client_id)
+                    client_information_cache[client_id] = h_app_item
+                except Exception:
+                    pass
 
         # create table if not exists issued_tokens (encoded_code, h_app, refresh_token, redeemed_from_code);
         cursor.execute(
@@ -310,7 +321,6 @@ def view_issued_tokens():
     connection = sqlite3.connect("tokens.db")
 
     with connection:
-        print(session.get("me"))
         cursor = connection.cursor()
         issued_tokens = cursor.execute(
             "SELECT * FROM issued_tokens WHERE me = ? ORDER BY issued_on DESC",
@@ -320,16 +330,12 @@ def view_issued_tokens():
         decoded_tokens = []
 
         for item in issued_tokens:
-            try:
-                ix = jwt.decode(item[0], config.SECRET_KEY, algorithms=["HS256"])
-                ix["h-app"] = json.loads(item[1]) if item[1] else {}
-                ix["issued_on"] = datetime.datetime.fromtimestamp(item[5]).strftime("%d %b %Y, %H:%M")
-                ix["token_encoded"] = item[0]
-                ix["scopes"] = ix.get("scope", "").split(" ") if ix.get("scope") else []
-                decoded_tokens.append(ix)
-            except Exception as e:
-                print(e)
-                pass
+            ix = jwt.decode(item[0], config.SECRET_KEY, algorithms=["HS256"], options={'verify_exp': False})
+            ix["h-app"] = json.loads(item[1]) if item[1] else {}
+            ix["issued_on"] = datetime.datetime.fromtimestamp(item[5]).strftime("%d %b %Y, %H:%M")
+            ix["token_encoded"] = item[0]
+            ix["scopes"] = ix.get("scope", "").split(" ") if ix.get("scope") else []
+            decoded_tokens.append(ix)
 
     return render_template(
         "admin/issued.html",
@@ -490,13 +496,14 @@ def token_endpoint():
         h_app_item = client_information_cache.get(client_id)
 
         if not h_app_item:
-            try:
-                client_id_app = requests.get(client_id, timeout=5)
-
-                h_app_item = indieweb_utils.get_h_app_item(client_id_app.text, client_id)
-                client_information_cache[client_id] = h_app_item
-            except Exception:
-                h_app_item = {}
+            if validators.url(client_id, private=False):
+                try:
+                    client_id_app = requests.get(client_id, timeout=5)
+                except Exception as e:
+                    h_app_item = indieweb_utils.get_h_app_item(client_id_app.text, client_id)
+                    client_information_cache[client_id] = h_app_item
+                except Exception:
+                    pass
 
         # create table if not exists issued_tokens (encoded_code, h_app, refresh_token, redeemed_from_code);
         cursor.execute(

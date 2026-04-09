@@ -22,3 +22,4 @@ Werkzeug==3.1.6
 flask-wtf
 python-jose
 indieweb_utils
+validators
